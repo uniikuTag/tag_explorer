@@ -1,0 +1,278 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>UNIIKU | Browser</title>
+    <link rel="icon" href="https://uniiku.net/wp-content/uploads/2020/05/cropped-favicon2-32x32.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <style>
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+
+        .zoom {
+            z-index: 1;
+            transition: transform .2s;
+        }
+
+        .zoom:hover {
+            transform: scale(2);
+        }
+    </style>
+    </style>
+</head>
+
+<body>
+    <div className="NavBar">
+        <nav class="navbar navbar-expand-lg navbar-light bg-warning max">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="https://uniiku.net">
+                    <img width="168" height="61" src="https://uniiku.net/wp-content/uploads/2020/05/logo168x61.png"
+                        class="custom-logo" alt="uniiku" />
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText"
+                    aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+
+                </button>
+                <div class="collapse navbar-collapse" id="navbarText">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    </ul>
+                    <span class="navbar-text">
+                        <a href="https://uniiku.net">¿Quieres crear tu propia colección?</a>
+                    </span>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <br><br>
+    <section class="row">
+        <form class="col-4 offset-4" role="search">
+            <div class="row">
+                <input id="tagId" name="tagId" class="col-9" type="text" placeholder="Search tag" aria-label="SEARCH">
+                <br>
+                <button class="btn btn-outline-success col-2 offset-1" type="submit">Search</button>
+            </div>
+        </form>
+    </section>
+    <br>
+    <hr>
+    <br>
+    <div id="results" class="container text-center">
+        <h1>SEARCH A TAG FOR GET RESULTS</h1>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+        crossorigin="anonymous"></script>
+    <script>
+        const address = 'Ei9WEwQuLZaFcTo3m8XtuUgcoAhoTNozbyP14L02pMY';
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        let box = ``;
+        let result = urlParams.has('tagId');
+        // Check if the URL contains the tagId parameter
+        if (result) {
+            document.getElementById("tagId").value=urlParams.get('tagId');
+            document.getElementById("results").innerHTML = `<h1>SEARCHING...</h1>`;
+            getData();
+        }
+
+        async function isImage(url) {
+            try {
+                const response = await fetch(url);
+                const contentType = response.headers.get('Content-Type');
+                if (contentType.startsWith('image/')) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (error) {
+                console.error(error);
+                return false;
+            }
+        }
+
+        async function getData() {
+            const tagId = urlParams.get('tagId');
+            
+            // First query to fetch tags with the given tag UUID
+            const queryTag = `
+                            query {
+                                transactions(
+                                    owners: ["${address}"]
+                                    tags: [{
+                                        name: "type",
+                                        values: ["tag"]
+                                    },{
+                                        name: "tagId",
+                                        values: ["${tagId}"]
+                                    }]
+                                ) {
+                                    edges {
+                                        node {
+                                            tags{
+                                                name
+                                                value
+                                            }
+                                            id
+                                        }
+                                    }
+                                }
+                            }
+                        `;
+
+            // Fetch the data from the first query
+            const res = await fetch("https://arweave.net/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify({
+                    query: queryTag
+                })
+            }).then((res => res.json()))
+
+            // Check if there are any transactions with the given tag UUID
+            let boxResults = res.data.transactions.edges
+            if (boxResults == 0) {
+                // If there are no transactions, set the "box" variable to display an error message
+                box = `<h1>THIS TAG DOESN'T EXIST</h1>
+                                <p>The tag "${tagId}" hasn't been found in the blockchain.</p>`
+            } else {
+                boxResults = boxResults[0].node;
+                // Create an object to store the tag information
+                const tagInfo = {};
+                boxResults.tags.forEach(function (tag) {
+                    tagInfo[tag.name] = tag.value;
+                });
+
+                // Second query to fetch post transactions with the given tag UUID
+                const queryPost = `
+                        query {
+                            transactions(
+                                owners: ["${address}"]
+                                tags: [{
+                                    name: "typeV7",
+                                    values: ["post"]
+                                },{
+                                    name: "tagUUID",
+                                    values: ["${tagId}"]
+                                }]
+                                sort: HEIGHT_DESC
+                            ) {
+                                edges {
+                                    node {
+                                        id
+                                        tags{
+                                            name
+                                            value
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        `;
+                // Fetch the data from the second query
+                const resPost = await fetch("https://arweave.net/graphql", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    body: JSON.stringify({
+                        query: queryPost
+                    })
+                }).then((res => res.json()))
+
+                let boxInfoPost = resPost.data.transactions.edges;
+                let boxPosts = ``;
+
+                // Check if there are no published stories
+                if (boxInfoPost.length == 0) {
+                    boxPosts = `<h2>NO STORIES PUBLISHED YET</h2>`;
+                } else {
+                    // Iterate through each post
+                    for (const post of boxInfoPost) {
+                        // Create an object to store the post's tag information
+                        const postTagInfo = {};
+
+                        // Get the tag information for each post
+                        post.node.tags.forEach(function (tag) {
+                            postTagInfo[tag.name] = tag.value;
+                        });
+
+                        // Add the post's content to the boxPosts variable
+                        boxPosts += `<div>
+                                        <h1 class="text-uppercase"></h1>
+                                        <p class="text-end h6 fw-lighter fst-italic">`+ postTagInfo.dateTime + `&nbsp;&nbsp;</p>`;
+
+                        // Check if the post has an archive
+                        if (postTagInfo.archive) {
+                            // Check if the archive is an image
+                            if (await isImage(postTagInfo.archive)) {
+                                boxPosts += `   <img style="width:60%" src="${postTagInfo.archive}">
+                                                <div class="m-5"><hr>`+ postTagInfo.content + `</div>
+                                                <br><br>
+                                                <hr>
+                                                <br><br>
+                                            </div>`;
+                            } else {
+                                boxPosts += `   <div class="m-5"><hr>` + postTagInfo.content + `</div>
+                                                <a href="${postTagInfo.archive}">Content File</a>
+                                                <br><br>
+                                                <hr>
+                                                <br><br>
+                                            </div>`;
+                            }
+                        } else {
+                            boxPosts += `   <div class="m-5"><hr>` + postTagInfo.content + `</div>
+                                            <br><br>
+                                            <hr>
+                                            <br><br>
+                                        </div>`;
+                        }
+                    }
+                }
+
+                // Set the "box" variable to store the final html
+                box = `
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="card" style="width: 18rem;">
+                                    <img src="${tagInfo.image}" class="card-img-top zoom" alt="tag image">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-center">${tagInfo.title}</h5>
+                                    </div>
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item text-start">
+                                            UUID set: ${tagInfo.setId}<br><br>
+                                            Total set: ${tagInfo.setSize}<br><br>
+                                            Actual: ${tagInfo.setPosition}
+                                        </li>
+                                        <li class="list-group-item text-start">MORE DATA <br><br>
+                                            UUID tag: ${tagInfo.tagId}<br><br>
+                                            Coined: ${tagInfo.dateMinted}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                    <p class="h1 text-center fw-bold">POSTS</p>
+                                    <hr>
+                                    <br>
+                                    <div class="text-center" id="publicaciones" style="overflow-y: scroll;">
+                                        ${boxPosts}
+                                    </div>
+                            </div>
+                        </div>`;
+            };
+            document.getElementById("results").innerHTML = box;
+        }
+    </script>
+</body>
+
+</html>
