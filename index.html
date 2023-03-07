@@ -156,10 +156,10 @@
                             transactions(
                                 owners: ["${address}"]
                                 tags: [{
-                                    name: "typeV7",
+                                    name: "type",
                                     values: ["post"]
                                 },{
-                                    name: "tagUUID",
+                                    name: "tagId",
                                     values: ["${tagId}"]
                                 }]
                                 sort: HEIGHT_DESC
@@ -208,7 +208,7 @@
                         // Add the post's content to the boxPosts variable
                         boxPosts += `<div>
                                         <h1 class="text-uppercase"></h1>
-                                        <p class="text-end h6 fw-lighter fst-italic">`+ postTagInfo.dateTime + `&nbsp;&nbsp;</p>`;
+                                        <p class="text-end h6 fw-lighter fst-italic">`+ postTagInfo.dateSigned + `&nbsp;&nbsp;</p>`;
 
                         // Check if the post has an archive
                         if (postTagInfo.archive) {
@@ -222,7 +222,7 @@
                                             </div>`;
                             } else {
                                 boxPosts += `   <div class="m-5"><hr>` + postTagInfo.content + `</div>
-                                                <a href="${postTagInfo.archive}">Content File</a>
+                                                <a href="${postTagInfo.image}">Content File</a>
                                                 <br><br>
                                                 <hr>
                                                 <br><br>
