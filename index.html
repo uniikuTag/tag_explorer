@@ -210,24 +210,14 @@
                                         <h1 class="text-uppercase"></h1>
                                         <p class="text-end h6 fw-lighter fst-italic">`+ postTagInfo.dateSigned + `&nbsp;&nbsp;</p>`;
 
-                        // Check if the post has an archive
-                        if (postTagInfo.archive) {
+                        // Check if the post has an image
+                        if (postTagInfo.image) {
                             // Check if the archive is an image
-                            if (await isImage(postTagInfo.archive)) {
-                                boxPosts += `   <img style="width:60%" src="${postTagInfo.archive}">
-                                                <div class="m-5"><hr>`+ postTagInfo.content + `</div>
+                            boxPosts += `   <img style="width:60%" src="${postTagInfo.image}">
                                                 <br><br>
                                                 <hr>
                                                 <br><br>
                                             </div>`;
-                            } else {
-                                boxPosts += `   <div class="m-5"><hr>` + postTagInfo.content + `</div>
-                                                <a href="${postTagInfo.image}">Content File</a>
-                                                <br><br>
-                                                <hr>
-                                                <br><br>
-                                            </div>`;
-                            }
                         } else {
                             boxPosts += `   <div class="m-5"><hr>` + postTagInfo.content + `</div>
                                             <br><br>
