@@ -98,7 +98,6 @@
         async function getData() {
             const tagId = urlParams.get('tagId');
             
-            // First query to fetch tags with the given tag UUID
             const queryTag = `
                             query {
                                 transactions(
@@ -136,7 +135,7 @@
                 })
             }).then((res => res.json()))
 
-            // Check if there are any transactions with the given tag UUID
+            // Check if there are any transactions with the given tag id
             let boxResults = res.data.transactions.edges
             if (boxResults == 0) {
                 // If there are no transactions, set the "box" variable to display an error message
@@ -239,12 +238,12 @@
                                     </div>
                                     <ul class="list-group list-group-flush">
                                         <li class="list-group-item text-start">
-                                            UUID set: ${tagInfo.setId}<br><br>
+                                            Id set: ${tagInfo.setId}<br><br>
                                             Total set: ${tagInfo.setSize}<br><br>
                                             Actual: ${tagInfo.setPosition}
                                         </li>
                                         <li class="list-group-item text-start">MORE DATA <br><br>
-                                            UUID tag: ${tagInfo.tagId}<br><br>
+                                            Id tag: ${tagInfo.tagId}<br><br>
                                             Coined: ${tagInfo.dateMinted}
                                         </li>
                                     </ul>
